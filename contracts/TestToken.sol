@@ -87,6 +87,14 @@ contract TestToken is ERC721, Ownable {
 		costs[tokenId] = cost;
 	}
 
+	function cancelSale(uint256 tokenId) external
+	{
+		_requireMinted(tokenId);
+		require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner nor approved");
+
+		statuses[tokenId] = status.Personal;
+	}
+
 	function buy(uint256 tokenId) external payable
 	{
 		_requireMinted(tokenId);

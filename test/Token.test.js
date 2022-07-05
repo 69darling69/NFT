@@ -12,7 +12,7 @@ before(async function () {
 	TestToken = await TestToken.deploy();
 });
 
-describe("TestToken", function() {
+describe("Sale", function() {
 	const cost = 1_000_000;
 	const royalty = 0.01;
 
@@ -169,6 +169,11 @@ describe("TestToken", function() {
 			await TestToken.provider.getBalance(TestToken.address)
 		).to.be.equal(0);
 	});
+});
+
+describe("Wide Sale", function() {
+	const cost = 1_000_000;
+	const royalty = 0.01;
 
 	it("Safe Mint second token", async function () {
 		await expect(
@@ -316,7 +321,44 @@ describe("TestToken", function() {
 			await TestToken.provider.getBalance(TestToken.address)
 		).to.be.equal(0);
 	});
-	
 });
 
+describe("Cancel Wide", function() {
+	const cost = 1_000_000;
+	const royalty = 0.01;
+
+	it("Third minted", async function () {
+		await expect(
+			await TestToken.connect(Admin).safeMint(Alice.address)
+		).to.be.not.reverted;
+	});
+
+	it("Sale for all by Alice", async function () {
+		await expect(
+			TestToken.connect(Alice).saleForAll(cost, 2)
+		).to.be.not.reverted;
+	});
+
+	it("Bob and Eve can buy", async function () {
+		await expect(
+			await TestToken.connect(Bob).canBuy(Bob.address, 2)
+		).to.be.true;
+
+		await expect(
+			await TestToken.connect(Eve).canBuy(Eve.address, 2)
+		).to.be.true;
+	});
+
+	it("Alice cancel sell", async function () {
+		await expect(
+			TestToken.connect(Alice).cancelSale(2)
+		).to.be.not.reverted;
+	});
+
+	it("Bob can't buy", async function () {
+		await expect(
+			TestToken.connect(Bob).buy(1, {value: cost * 2})
+		).to.be.reverted;
+	});
 	
+});
