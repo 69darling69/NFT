@@ -1,0 +1,59 @@
+{
+  "layers": [
+    {
+      "name": "wall",
+      "values": [
+        "1"
+      ],
+      "trait_path": "./trait-layers/wall",
+      "filename": [
+        "1"
+      ],
+      "weights": [
+        100.0
+      ]
+    },
+    {
+      "name": "back",
+      "values": [
+        "1",
+        "2",
+        "3"
+      ],
+      "trait_path": "./trait-layers/back",
+      "filename": [
+        "1",
+        "2",
+        "3"
+      ],
+      "weights": [
+        33.333333333333336,
+        33.333333333333336,
+        33.333333333333336
+      ]
+    },
+    {
+      "name": "window",
+      "values": [
+        "1",
+        "2",
+        "3"
+      ],
+      "trait_path": "./trait-layers/window",
+      "filename": [
+        "1",
+        "2",
+        "3"
+      ],
+      "weights": [
+        33.333333333333336,
+        33.333333333333336,
+        33.333333333333336
+      ]
+    }
+  ],
+  "incompatibilities": [],
+  "baseURI": "ipfs://xxxx/",
+  "name": "Item #",
+  "description": "description here please"
+}

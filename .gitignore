@@ -1,3 +1,11 @@
+__pycache__
+*venv
+TokenGenerator/Generator/trait-layers/*
+!TokenGenerator/Generator/trait-layers/README.md
+TokenGenerator/Generator/metadata/*
+!TokenGenerator/Generator/metadata/README.md
+
+
 *.swp
 *.swo
 
