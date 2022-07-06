@@ -25,14 +25,28 @@ contract TestToken is ERC721, Ownable {
 		return "TestURI://";
 	}
 
-	function safeMint(address to) external onlyOwner {
+	modifier requireMinted(uint256 tokenId) {
+		_requireMinted(tokenId);
+		_;
+	}
+
+	modifier ApprovedOrOwnerOnly(uint256 tokenId)
+	{
+		require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner nor approved");
+		_;
+	}
+
+	function safeMint(address to)
+	external onlyOwner
+	{
 		uint256 tokenId = _tokenIdCounter.current();
 		_tokenIdCounter.increment();
 		_safeMint(to, tokenId);
 		statuses[tokenId] = status.Personal;
 	}
 
-	function canBuy(address who, uint256 tokenId) view public
+	function canBuy(address who, uint256 tokenId)
+	public view requireMinted(tokenId)
 	returns (bool)
 	{
 		if (statusOf(tokenId) == status.WideSale)
@@ -46,52 +60,46 @@ contract TestToken is ERC721, Ownable {
 		return false;
 	}
 
-	function costOf(uint256 tokenId) view external
+	function costOf(uint256 tokenId)
+	external view requireMinted(tokenId)
 	returns (uint256)
 	{
-		_requireMinted(tokenId);
 		require(statuses[tokenId] != status.Personal, "Token is not on sale");
 
 		return costs[tokenId];
 	}
 
-	function statusOf(uint256 tokenId) view public
+	function statusOf(uint256 tokenId)
+	public view requireMinted(tokenId)
 	returns (status)
 	{
-		_requireMinted(tokenId);
 		return statuses[tokenId];
 	}
 
-	function saleFor(address buyer, uint256 cost, uint256 tokenId) external
+	function saleFor(address buyer, uint256 cost, uint256 tokenId)
+	external requireMinted(tokenId) ApprovedOrOwnerOnly(tokenId)
 	{
-		_requireMinted(tokenId);
-		require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner nor approved");
-
 		whoCanBuy[tokenId] = buyer;
 		costs[tokenId] = cost;
 		statuses[tokenId] = status.Sale;
 	}
 
-	function saleForAll(uint256 cost, uint256 tokenId) external
+	function saleForAll(uint256 cost, uint256 tokenId)
+	external requireMinted(tokenId) ApprovedOrOwnerOnly(tokenId)
 	{
-		_requireMinted(tokenId);
-		require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner nor approved");
-
 		statuses[tokenId] = status.WideSale;
 		costs[tokenId] = cost;
 	}
 
-	function cancelSale(uint256 tokenId) external
+	function cancelSale(uint256 tokenId)
+	external requireMinted(tokenId) ApprovedOrOwnerOnly(tokenId)
 	{
-		_requireMinted(tokenId);
-		require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner nor approved");
-
 		statuses[tokenId] = status.Personal;
 	}
 
-	function buy(uint256 tokenId) external payable
+	function buy(uint256 tokenId)
+	external payable requireMinted(tokenId)
 	{
-		_requireMinted(tokenId);
 		require(canBuy(_msgSender(), tokenId), "Caller can't buy this token");
 		require(_msgValue() >= costs[tokenId], "Message value are too low");
 
