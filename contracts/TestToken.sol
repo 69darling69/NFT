@@ -15,9 +15,9 @@ contract TestToken is ERC721, Ownable {
 	mapping(uint256 => address) private whoCanBuy;
 	mapping(uint256 => uint256) private costs;
 	mapping(uint256 => status) private statuses;
-	mapping (address => uint256) private goods;
 
 	uint256 royalty = 1;
+	uint256 denominator = 100;
 
 	constructor() ERC721("TestToken", "TT") {}
 
@@ -44,12 +44,6 @@ contract TestToken is ERC721, Ownable {
 			return true;
 		}
 		return false;
-	}
-
-	function goodsOf(address who) external view
-	returns (uint256)
-	{
-		return goods[who];
 	}
 
 	function costOf(uint256 tokenId) view external
@@ -106,25 +100,12 @@ contract TestToken is ERC721, Ownable {
 		address prevOwner = ownerOf(tokenId);
 		_safeTransfer(ownerOf(tokenId), _msgSender(), tokenId, "");
 		
-		addGoods(prevOwner, costs[tokenId]);
-		goods[_msgSender()] += _msgValue() - costs[tokenId];
-	}
-
-	function addGoods(address getter, uint256 amount) private
-	{
-		uint256 ownerAmount = amount * royalty / 100;
-		goods[owner()] += ownerAmount;
-		goods[getter] += amount - ownerAmount;
-	}
-
-	function withdraw() external
-	{
-		require(goods[_msgSender()] > 0, "Nothing to withdraw");
-
-		uint256 amount = goods[_msgSender()];
-		goods[_msgSender()] = 0;
-
-		payable(_msgSender()).transfer(amount);
+		if (_msgValue() > costs[tokenId])
+		{
+			payable(_msgSender()).transfer(_msgValue() - costs[tokenId]);
+		}
+		payable(prevOwner).transfer(costs[tokenId] - costs[tokenId] * royalty / denominator);
+		payable(owner()).transfer(address(this).balance);
 	}
 
 	function _msgValue() internal

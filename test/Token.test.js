@@ -5,6 +5,10 @@ const { BigNumber } = require("ethers");
 const { ethers } = require("hardhat");
 const { start } = require("repl");
 
+const cost = 1_000_000;
+const royalty = 1;
+const denominator = 100;
+
 before(async function () {
 	TestToken = await ethers.getContractFactory("TestToken");
 	[Admin, Alice, Bob, Eve] = await ethers.getSigners();
@@ -13,8 +17,6 @@ before(async function () {
 });
 
 describe("Sale", function() {
-	const cost = 1_000_000;
-	const royalty = 0.01;
 
 	it("Safe mint as Admin", async function () {
 		await expect(
@@ -81,9 +83,14 @@ describe("Sale", function() {
 	});
 
 	it("Bob buy", async function () {
-		await expect(
-			TestToken.connect(Bob).buy(0, {value: cost})
-		).to.be.not.reverted;
+		AliceBefore = BigInt(await TestToken.provider.getBalance(Alice.address));
+		BobBefore = BigInt(await TestToken.provider.getBalance(Bob.address));
+		AdminBefore = BigInt(await TestToken.provider.getBalance(Admin.address));
+
+		tx = await TestToken.connect(Bob).buy(0, {value: cost});
+
+		receipt = await tx.wait();
+		BobFee = BigInt(receipt.cumulativeGasUsed) * BigInt(receipt.effectiveGasPrice);
 		
 		await expect(
 			await TestToken.connect(Eve).ownerOf(0)
@@ -92,6 +99,14 @@ describe("Sale", function() {
 		await expect(
 			await TestToken.connect(Eve).balanceOf(Bob.address)
 		).to.be.equal(1);
+
+		AliceAfter = BigInt(await TestToken.provider.getBalance(Alice.address));
+		BobAfter = BigInt(await TestToken.provider.getBalance(Bob.address));
+		AdminAfter = BigInt(await TestToken.provider.getBalance(Admin.address));
+
+		await expect(AliceAfter - AliceBefore).to.be.equal(cost * (1 - royalty / denominator));
+		await expect(BobBefore - BobAfter - BobFee).to.be.equal(cost);
+		await expect(AdminAfter - AdminBefore).to.be.equal(cost * royalty / denominator);
 	});
 
 	it("New Token owner", async function () {        
@@ -114,57 +129,7 @@ describe("Sale", function() {
 		).to.be.equal(1);
 	});
 
-	it("Goods of Alice", async function () {
-		await expect(
-			await TestToken.connect(Eve).goodsOf(Alice.address)
-		).to.be.equal(cost * (1 - royalty));
-	});
-
-	it("Goods of Admin", async function () {
-		await expect(
-			await TestToken.connect(Eve).goodsOf(Admin.address)
-		).to.be.equal(cost * royalty);
-	});
-
-	it("Alice withdraw", async function () {
-		goodsBefore = BigInt(await TestToken.provider.getBalance(Alice.address));
-
-		tx = await TestToken.connect(Alice).withdraw();
-
-		const receipt = await tx.wait();
-		const txFee = BigInt(receipt.cumulativeGasUsed) * BigInt(receipt.effectiveGasPrice);
-
-		goodsAfter = BigInt(await TestToken.provider.getBalance(Alice.address));
-
-		await expect(goodsAfter - goodsBefore + txFee).to.be.equal(cost * (1 - royalty));
-	});
-
-	it("Contract goods after withdraw", async function () {
-		await expect(
-			await TestToken.provider.getBalance(TestToken.address)
-		).to.be.equal(cost * royalty);
-	});
-
-	it("Eve withdraw with empty goods", async function () {
-		await expect(
-			TestToken.connect(Eve).withdraw()
-		).to.be.reverted;
-	});
-
-	it("Admin withdraw", async function () {
-		goodsBefore = BigInt(await TestToken.provider.getBalance(Admin.address));
-
-		tx = await TestToken.connect(Admin).withdraw();
-
-		const receipt = await tx.wait();
-		const txFee = BigInt(receipt.cumulativeGasUsed) * BigInt(receipt.effectiveGasPrice);
-
-		goodsAfter = BigInt(await TestToken.provider.getBalance(Admin.address));
-
-		await expect(goodsAfter - goodsBefore + txFee).to.be.equal(cost * royalty);
-	});
-
-	it("Contract goods after all withdraw are empty", async function () {
+	it("Contract balance are empty", async function () {
 		await expect(
 			await TestToken.provider.getBalance(TestToken.address)
 		).to.be.equal(0);
@@ -172,8 +137,6 @@ describe("Sale", function() {
 });
 
 describe("Wide Sale", function() {
-	const cost = 1_000_000;
-	const royalty = 0.01;
 
 	it("Safe Mint second token", async function () {
 		await expect(
@@ -221,10 +184,31 @@ describe("Wide Sale", function() {
 		).to.be.reverted;
 	});
 
-	it("Bob buys x2 cost", async function () {
+	it("Bob buy x2 cost", async function () {
+		AliceBefore = BigInt(await TestToken.provider.getBalance(Alice.address));
+		BobBefore = BigInt(await TestToken.provider.getBalance(Bob.address));
+		AdminBefore = BigInt(await TestToken.provider.getBalance(Admin.address));
+
+		tx = await TestToken.connect(Bob).buy(1, {value: 2 * cost});
+
+		receipt = await tx.wait();
+		BobFee = BigInt(receipt.cumulativeGasUsed) * BigInt(receipt.effectiveGasPrice);
+		
 		await expect(
-			TestToken.connect(Bob).buy(1, {value: cost * 2})
-		).to.be.not.reverted;
+			await TestToken.connect(Eve).ownerOf(1)
+		).to.be.equal(Bob.address);
+
+		await expect(
+			await TestToken.connect(Eve).balanceOf(Bob.address)
+		).to.be.equal(2);
+
+		AliceAfter = BigInt(await TestToken.provider.getBalance(Alice.address));
+		BobAfter = BigInt(await TestToken.provider.getBalance(Bob.address));
+		AdminAfter = BigInt(await TestToken.provider.getBalance(Admin.address));	
+
+		await expect(AliceAfter - AliceBefore).to.be.equal(cost * (1 - royalty / denominator));
+		await expect(BobBefore - BobAfter - BobFee).to.be.equal(cost);
+		await expect(AdminAfter - AdminBefore).to.be.equal(cost * royalty / denominator);
 	});
 
 	it("Eve buys after Bob", async function () {
@@ -253,70 +237,7 @@ describe("Wide Sale", function() {
 		).to.be.equal(2);
 	});
 
-	it("Goods of Alice", async function () {
-		await expect(
-			await TestToken.connect(Eve).goodsOf(Alice.address)
-		).to.be.equal(cost * (1 - royalty));
-	});
-
-	it("Goods of Admin", async function () {
-		await expect(
-			await TestToken.connect(Eve).goodsOf(Admin.address)
-		).to.be.equal(cost * royalty);
-	});
-
-	it("Alice withdraw", async function () {
-		goodsBefore = BigInt(await TestToken.provider.getBalance(Alice.address));
-
-		tx = await TestToken.connect(Alice).withdraw();
-
-		const receipt = await tx.wait();
-		const txFee = BigInt(receipt.cumulativeGasUsed) * BigInt(receipt.effectiveGasPrice);
-
-		goodsAfter = BigInt(await TestToken.provider.getBalance(Alice.address));
-
-		await expect(goodsAfter - goodsBefore + txFee).to.be.equal(cost * (1 - royalty));
-	});
-
-	it("Bob withdraw", async function () {
-		goodsBefore = BigInt(await TestToken.provider.getBalance(Bob.address));
-
-		tx = await TestToken.connect(Bob).withdraw();
-
-		const receipt = await tx.wait();
-		const txFee = BigInt(receipt.cumulativeGasUsed) * BigInt(receipt.effectiveGasPrice);
-
-		goodsAfter = BigInt(await TestToken.provider.getBalance(Bob.address));
-
-		await expect(goodsAfter - goodsBefore + txFee).to.be.equal(cost);
-	});
-
-	it("Contract goods after withdraw", async function () {
-		await expect(
-			await TestToken.provider.getBalance(TestToken.address)
-		).to.be.equal(cost * royalty);
-	});
-
-	it("Eve withdraw with empty goods", async function () {
-		await expect(
-			TestToken.connect(Eve).withdraw()
-		).to.be.reverted;
-	});
-
-	it("Admin withdraw", async function () {
-		goodsBefore = BigInt(await TestToken.provider.getBalance(Admin.address));
-
-		tx = await TestToken.connect(Admin).withdraw();
-
-		const receipt = await tx.wait();
-		const txFee = BigInt(receipt.cumulativeGasUsed) * BigInt(receipt.effectiveGasPrice);
-
-		goodsAfter = BigInt(await TestToken.provider.getBalance(Admin.address));
-
-		await expect(goodsAfter - goodsBefore + txFee).to.be.equal(cost * royalty);
-	});
-
-	it("Contract goods after all withdraw are empty", async function () {
+	it("Contract balance are empty", async function () {
 		await expect(
 			await TestToken.provider.getBalance(TestToken.address)
 		).to.be.equal(0);
@@ -324,8 +245,6 @@ describe("Wide Sale", function() {
 });
 
 describe("Cancel Wide", function() {
-	const cost = 1_000_000;
-	const royalty = 0.01;
 
 	it("Third minted", async function () {
 		await expect(
