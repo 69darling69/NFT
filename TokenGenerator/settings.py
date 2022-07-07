@@ -1,7 +1,10 @@
+import pathlib
+
+
 PROVIDER_URL = "https://rpc.goerli.mudit.blog"
 CONTRACT_ADDRESS = '0x081c431772310532DC6EB7C66e35643384463f3C'
 POLL_INTERVAL = 2
-LOG_FILE = "debug.log"
+LOG_FILE = pathlib.Path(__file__).parent.parent.absolute().__str__() + "/TokenGenerator/debug.log"
 ABI = [
 	{
 		"inputs": [],

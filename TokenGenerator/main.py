@@ -53,7 +53,8 @@ if __name__ == "__main__":
 	try:
 		main()
 	except KeyboardInterrupt:
-		logging.info("Stop polling\n")
+		logging.info("Keyboard Interrupt")
 	except:
 		logging.exception("Error occured")
+	logging.info("Stop polling\n")
 
