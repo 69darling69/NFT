@@ -33,14 +33,14 @@ def main():
 
 	logging.info("Start polling each %s seconds", POLL_INTERVAL)
 	while True:
-			for event in event_filter.get_new_entries():
-				if event["args"]["from"] == ZERO_ADDRESS:
-					if event["args"]["tokenId"] < generator.generated_tokens_count():
-						continue
-					logging.info("New minted token with %s ID", str(event["args"]["tokenId"]))
-					generator.generate_new_token()
-					logging.info("New token created and added to IPFS")
-			time.sleep(POLL_INTERVAL)
+		for event in event_filter.get_new_entries():
+			if event["args"]["from"] == ZERO_ADDRESS:
+				if event["args"]["tokenId"] + 1 < generator.generated_tokens_count():
+					continue
+				logging.info("New minted token with %s ID", str(event["args"]["tokenId"]))
+				generator.generate_new_token()
+				logging.info("New token created and added to IPFS")
+		time.sleep(POLL_INTERVAL)
 
 {
 	"args":

@@ -33,11 +33,13 @@ class Pinner:
 		}
 		with open("TokenGenerator/Generator/metadata/Tokens", "r") as file:
 			all_tokens_hash = file.read()
-		old_cid = all_tokens_hash.split('\n')[-2].split()[-1]
 
-		txn = self.contract.functions.CIDset(index, old_cid).buildTransaction({"from": self.address, "nonce": self.web3.eth.get_transaction_count(self.address)})
-		signed_txn = self.web3.eth.account.sign_transaction(txn, private_key=self.private_key)
-		self.web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+		if len(all_tokens_hash.split('\n')) > 1:
+			old_cid = all_tokens_hash.split('\n')[-2].split()[-1]
+
+			txn = self.contract.functions.CIDset(index, old_cid).buildTransaction({"from": self.address, "nonce": self.web3.eth.get_transaction_count(self.address)})
+			signed_txn = self.web3.eth.account.sign_transaction(txn, private_key=self.private_key)
+			self.web3.eth.send_raw_transaction(signed_txn.rawTransaction)
 
 		return json.loads(requests.request("POST", url, headers=headers, data=payload).text)["IpfsHash"]
 	
@@ -45,8 +47,9 @@ class Pinner:
 	def get_json(cid):
 		return requests.get("https://gateway.pinata.cloud/ipfs/" + cid).text
 
+
 class Generator:
-	def __init__(self) -> None:
+	def __init__(self):
 		self.path = pathlib.Path(__file__).parent.absolute().__str__()
 		self.load_config()
 		self.max_tokens = self.calc_max_tokens()
@@ -88,7 +91,7 @@ class Generator:
 		with open(self.path + f"/metadata/{index}.json", "w") as file:
 			print(json.dumps(token).replace(' ', ''), file=file)
 		
-		cid = self.pinner.pin(token, index)
+		cid = self.pinner.pin(token, index - 1)
 
 		with open(self.path + "/metadata/Tokens", "a") as file:
 				print(hashlib.sha512(Pinner.get_json(cid).encode()).hexdigest(), cid, sep=" ", file=file)
