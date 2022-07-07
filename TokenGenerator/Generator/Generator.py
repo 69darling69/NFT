@@ -7,7 +7,7 @@ import tempfile
 
 class Generator:
 	def __init__(self) -> None:
-		self.path = pathlib.Path(__file__).parent.resolve().name
+		self.path = pathlib.Path(__file__).parent.absolute().__str__()
 		self.load_config()
 		self.max_tokens = self.calc_max_tokens()
 
