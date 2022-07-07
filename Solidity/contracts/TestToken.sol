@@ -15,6 +15,7 @@ contract TestToken is ERC721, Ownable {
 	mapping(uint256 => address) private whoCanBuy;
 	mapping(uint256 => uint256) private costs;
 	mapping(uint256 => status) private statuses;
+	mapping(uint256 => string) private CIDs;
 
 	uint256 royalty = 1;
 	uint256 denominator = 100;
@@ -22,7 +23,28 @@ contract TestToken is ERC721, Ownable {
 	constructor() ERC721("TestToken", "TT") {}
 
 	function _baseURI() internal pure override returns (string memory) {
-		return "TestURI://";
+		return "ipfs://";
+	}
+
+	function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+        _requireMinted(tokenId);
+
+        string memory baseURI = _baseURI();
+        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, CIDof(tokenId))) : "";
+    }
+
+	function CIDof(uint256 tokenId)
+	public view requireMinted(tokenId)
+	returns (string memory)
+	{
+		return CIDs[tokenId];
+	}
+
+	function CIDset(uint256 tokenId, string calldata cid)
+	external requireMinted(tokenId) onlyOwner
+	{
+		require(bytes(CIDs[tokenId]).length == 0, "CID already exist");
+		CIDs[tokenId] = cid;
 	}
 
 	modifier requireMinted(uint256 tokenId) {
