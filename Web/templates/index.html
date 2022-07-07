@@ -1,0 +1,18 @@
+<h1>Hashes of Tokens</h1>
+
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Hash</th>
+        <th>Salt</th>
+        <th>URL</th>
+    </tr>
+{% for hash in hashes %}
+    <tr>
+        <td>{{hashes.index(hash)}}</td>
+        <td>{{hash}}</td>
+        <td>{{0}}</td>
+        <td><a href="">LINK</a></td>
+    </tr>
+{% endfor %}
+</table>
