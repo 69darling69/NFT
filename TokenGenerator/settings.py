@@ -2,7 +2,8 @@ import pathlib
 
 
 PROVIDER_URL = "https://rpc.goerli.mudit.blog"
-CONTRACT_ADDRESS = '0x081c431772310532DC6EB7C66e35643384463f3C'
+CONTRACT_ADDRESS = '0x1eB0A96522c13E59Ca887b4Fe26CD810906C8601'
+ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 POLL_INTERVAL = 2
 LOG_FILE = pathlib.Path(__file__).parent.parent.absolute().__str__() + "/TokenGenerator/debug.log"
 ABI = [
@@ -104,6 +105,43 @@ ABI = [
 		],
 		"name": "Transfer",
 		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "CIDof",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "cid",
+				"type": "string"
+			}
+		],
+		"name": "CIDset",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
 	},
 	{
 		"inputs": [

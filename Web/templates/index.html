@@ -4,13 +4,18 @@
     <tr>
         <th>ID</th>
         <th>Hash</th>
-        <th>URL</th>
+        <th>CID</th>
     </tr>
-{% for hash in hashes %}
+{% for i in range(info | length - 1) %}
     <tr>
-        <td>{{hashes.index(hash)}}</td>
-        <td>{{hash}}</td>
-        <td><a href="">LINK</a></td>
+        <td>{{i}}</td>
+        <td>{{info[i][0]}}</td>
+        <td>{{info[i][1]}}</td>
     </tr>
 {% endfor %}
+<tr>
+    <td>{{info | length - 1}}</td>
+    <td>{{info[-1][0]}}</td>
+    <td>Not minted yet</td>
+</tr>
 </table>

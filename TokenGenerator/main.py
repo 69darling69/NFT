@@ -1,3 +1,4 @@
+from argparse import ZERO_OR_MORE
 from cmath import log
 import random
 import sys
@@ -5,6 +6,7 @@ import time
 import logging
 from web3 import Web3
 from settings import *
+from Generator.Generator import Generator
 
 def main():
 	logging.basicConfig(
@@ -27,10 +29,17 @@ def main():
 	contract = web3.eth.contract(address=CONTRACT_ADDRESS, abi=ABI)
 	event_filter = contract.events.Transfer.createFilter(fromBlock='latest')
 
+	generator = Generator()
+
 	logging.info("Start polling each %s seconds", POLL_INTERVAL)
 	while True:
 			for event in event_filter.get_new_entries():
-				print(Web3.toJSON(event))
+				if event["args"]["from"] == ZERO_ADDRESS:
+					if event["args"]["tokenId"] < generator.generated_tokens_count():
+						continue
+					logging.info("New minted token with %s ID", str(event["args"]["tokenId"]))
+					generator.generate_new_token()
+					logging.info("New token created and added to IPFS")
 			time.sleep(POLL_INTERVAL)
 
 {

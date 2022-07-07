@@ -9,7 +9,7 @@ root_path = pathlib.Path(__file__).parent.parent.absolute().__str__()
 def hello_world():
     with open(root_path + "/TokenGenerator/Generator/metadata/Tokens", "r") as file:
         all_tokens_hash = file.read()
-    hashes = all_tokens_hash.split()
-    return render_template('index.html', hashes=hashes)
+    info = [s.split() for s in all_tokens_hash.split('\n')][:-1]
+    return render_template('index.html', info=info)
 
 app.run()
